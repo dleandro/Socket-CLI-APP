@@ -1,34 +1,31 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net"
 )
 
-type socket struct{
+type Socket struct{
 	connection net.Conn
 	err error
 }
 
-var s = &socket{}
+var newS = &Socket{}
 
-func establishConnection() (conn net.Conn, err error) {
-	s.connection, s.err = net.Dial(SERVER_TYPE, SERVER_HOST+":"+SERVER_PORT)
+func establishConnection() *Socket {
+	newS.connection, newS.err = net.Dial(SERVER_TYPE, SERVER_HOST+":"+SERVER_PORT)
 	
-	if s.err != nil {
-		fmt.Println(s.err)
+	if newS.err != nil {
+		log.Println(newS.err)
 	}
 
-	return s.connection, s.err
+	return newS
 }
 
-func sendData(numberToSend string) {
-	_, s.err = s.connection.Write([]byte(numberToSend))
-	buffer := make([]byte, 1024)
-	mLen, err := s.connection.Read(buffer)
-	if err != nil {
-		fmt.Println("Error reading:", err.Error())
+func (s *Socket) sendData(numberToSend string) {
+	_, s.err = s.connection.Write([]byte(numberToSend + "/n")) // add /n to simulate a command entered in the terminal
+	if s.err != nil {
+		log.Println("Error writing:", s.err.Error())
+		return
 	}
-	
-	fmt.Println("Received: ", string(buffer[:mLen]))
 }
