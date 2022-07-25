@@ -39,7 +39,7 @@ func main() {
 }
 
 func scheduleSummary(s *Server) {
-	for range time.Tick(10 * time.Minute) {
+	for range time.Tick(10 * time.Second) {
 		s.numberMessages.getSummary()
 		s.numberMessages.transferSummary()
 		s.numberMessages.resetCurrentSummary()
@@ -72,10 +72,10 @@ func CreateServer() *Server {
 func (s *Server) Stop() {
 	close(s.quit)
 	s.listener.Close()
-	s.wg.Wait()
 	if env == "TEST" {
 		appCleanlyShutdown <- true
 	}
+	s.wg.Wait()
 }
 
 func (s *Server) serve() {
@@ -126,6 +126,7 @@ ReadLoop:
 				return
 			}
 			input := string(buf[:n - 2])  // subtract by two because the commands always have an extra /n at the end
+			log.Println(input)
 			err = handleCommand(input, s, conn)
 			log.Printf("received from %v: %s", conn.RemoteAddr(), input)
 			if (env == "TEST") {

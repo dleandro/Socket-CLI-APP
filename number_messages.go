@@ -58,8 +58,8 @@ func (m *NumberMessages) shouldNumberBeLogged(input string) bool {
 }
 
 func (m *NumberMessages) getSummary() {
-	differenceBetweenLastSummaryOfDuplicates := m.lastSummary.numberOfDuplicates - m.currentSummary.numberOfDuplicates
-	differenceBetweenLastSummaryOfUniques := m.lastSummary.numberOfUniques - m.currentSummary.numberOfUniques
+	differenceBetweenLastSummaryOfDuplicates := m.currentSummary.numberOfDuplicates - m.lastSummary.numberOfDuplicates
+	differenceBetweenLastSummaryOfUniques :=  m.currentSummary.numberOfUniques - m.lastSummary.numberOfUniques
 
 	log.Printf("Received %d unique numbers, %d duplicates. Unique total: %d", differenceBetweenLastSummaryOfUniques, differenceBetweenLastSummaryOfDuplicates, m.currentSummary.totalNumberOfUniques)
 }
