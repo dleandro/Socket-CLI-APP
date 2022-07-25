@@ -4,7 +4,7 @@
 
 2. Run on the root folder the following command:
 ```
-    go run server.go
+    go run .
 ```
 
 3. Open up a terminal and write :
