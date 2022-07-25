@@ -17,6 +17,4 @@
 To run the tests run the following command:
 ```
     go test
-
-
-
+```
