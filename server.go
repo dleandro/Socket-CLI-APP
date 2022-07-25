@@ -106,7 +106,7 @@ func (s *Server) serve() {
 
 func (s *Server) handleConection(conn net.Conn) {
 	defer conn.Close()
-	buf := make([]byte, 1024)
+	buf := make([]byte, 128)
 ReadLoop:
 	for {
 		select {
@@ -126,7 +126,6 @@ ReadLoop:
 				return
 			}
 			input := string(buf[:n - 2])  // subtract by two because the commands always have an extra /n at the end
-			log.Println(input)
 			err = handleCommand(input, s, conn)
 			log.Printf("received from %v: %s", conn.RemoteAddr(), input)
 			if (env == "TEST") {
