@@ -1,4 +1,4 @@
-# new-relic-application
+# Socket-CLI-APP
 
 1. Install Go (https://go.dev/doc/install)
 
