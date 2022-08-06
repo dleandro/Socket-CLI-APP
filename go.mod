@@ -1,4 +1,4 @@
-module new-relic-application
+module tcp-socket-app
 
 go 1.18
 

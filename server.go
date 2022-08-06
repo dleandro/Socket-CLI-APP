@@ -6,70 +6,63 @@ import (
 	"net"
 	"os"
 	"sync"
-	"time"
 
+	logs "tcp-socket-app/logs"
+	m "tcp-socket-app/messages"
 	"golang.org/x/net/netutil"
 )
 
 const (
-	SERVER_HOST = "localhost"
-	SERVER_PORT = "4000"
-	SERVER_TYPE = "tcp"
-	MAXIMUM_NUMBER_OF_CONNECTIONS = 5
-	NUMBER_OF_CHARS_PER_MESSAGE = 9
-	LOG_FILE_NAME = "numbers.log"
+	serverHost = "localhost"
+	serverPort = "4000"
+	serverType = "tcp"
+	maximumNumberOfConnections = 5
 )
 
 var env string
 var connectionEstablished = make(chan bool)
-var numberMessagesReceived = make(chan *NumberMessages)
 var appCleanlyShutdown = make(chan bool)
 
+// Server obj
 type Server struct {
 	listener net.Listener
 	quit chan interface{}
 	wg sync.WaitGroup
 	cmds []Command
-	numberMessages *NumberMessages
+	numberMessages *m.NumberMessages
 }
 
 func main() {
-	os.Create(LOG_FILE_NAME)
-	CreateServer()
+	logger := logs.InitLogger()
+	CreateServer(logger.LogFileIsSetupChan)
 }
 
-func scheduleSummary(s *Server) {
-	for range time.Tick(10 * time.Second) {
-		s.numberMessages.getSummary()
-		s.numberMessages.transferSummary()
-		s.numberMessages.resetCurrentSummary()
-	}
-}
-
-func CreateServer() *Server {
+// CreateServer Exported function to initialize server
+func CreateServer(LogFileIsSetupChan chan(bool)) *Server {
 	env = os.Getenv("GO_ENV")
 	s := &Server{
 		quit: make(chan interface{}),
 		cmds: []Command{TerminateCommand{}},
-		numberMessages: &NumberMessages{},
 	}
-	l, err := net.Listen(SERVER_TYPE, SERVER_HOST+":"+SERVER_PORT)
+	s.numberMessages = m.Init(s.quit, s.wg)
+	l, err := net.Listen(serverType, serverHost+":"+serverPort)
 	if err != nil {
 		log.Fatal(err)
 	}
-	l = netutil.LimitListener(l, MAXIMUM_NUMBER_OF_CONNECTIONS)
+	l = netutil.LimitListener(l, maximumNumberOfConnections)
 	s.listener = l
 
 	log.Println("Server Running...")
-	log.Println("Listening on " + SERVER_HOST + ":" + SERVER_PORT)
+	log.Println("Listening on " + serverHost + ":" + serverPort)
 	log.Println("Waiting for client...")
-	go scheduleSummary(s)
+
+	<- LogFileIsSetupChan
 	s.wg.Add(1)
 	s.serve()
 	return s
 }
 
-func (s *Server) Stop() {
+func (s *Server) stop() {
 	close(s.quit)
 	s.listener.Close()
 	if env == "TEST" {
@@ -112,6 +105,8 @@ ReadLoop:
 		select {
 		case <-s.quit:
 			return
+
+		// TODO: case for receiving a message from other client connections could add a new channel
 		default:
 			n, err := conn.Read(buf)
 			if err != nil {
@@ -126,7 +121,7 @@ ReadLoop:
 				return
 			}
 			input := string(buf[:n - 2])  // subtract by two because the commands always have an extra /n at the end
-			err = handleCommand(input, s, conn)
+			err = handleCommand(input, s, conn) // TODO: trigger channel for chat
 			log.Printf("received from %v: %s", conn.RemoteAddr(), input)
 			if (env == "TEST") {
 				numberMessagesReceived <- s.numberMessages

@@ -5,6 +5,7 @@ import (
 	"net"
 )
 
+// Socket object exported for testing reasons
 type Socket struct{
 	connection net.Conn
 	err error
@@ -13,7 +14,7 @@ type Socket struct{
 var newS = &Socket{}
 
 func establishConnection() *Socket {
-	newS.connection, newS.err = net.Dial(SERVER_TYPE, SERVER_HOST+":"+SERVER_PORT)
+	newS.connection, newS.err = net.Dial(serverType, serverHost+":"+serverPort)
 	
 	if newS.err != nil {
 		log.Println(newS.err)
