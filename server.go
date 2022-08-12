@@ -7,15 +7,15 @@ import (
 	"os"
 	"sync"
 
+	"golang.org/x/net/netutil"
 	logs "tcp-socket-app/logs"
 	m "tcp-socket-app/messages"
-	"golang.org/x/net/netutil"
 )
 
 const (
-	serverHost = "localhost"
-	serverPort = "4000"
-	serverType = "tcp"
+	serverHost                 = "localhost"
+	serverPort                 = "4000"
+	serverType                 = "tcp"
 	maximumNumberOfConnections = 5
 )
 
@@ -25,10 +25,10 @@ var appCleanlyShutdown = make(chan bool)
 
 // Server obj
 type Server struct {
-	listener net.Listener
-	quit chan interface{}
-	wg sync.WaitGroup
-	cmds []Command
+	listener       net.Listener
+	quit           chan interface{}
+	wg             sync.WaitGroup
+	cmds           []Command
 	numberMessages *m.NumberMessages
 }
 
@@ -38,7 +38,7 @@ func main() {
 }
 
 // CreateServer Exported function to initialize server
-func CreateServer(LogFileIsSetupChan chan(bool)) *Server {
+func CreateServer(LogFileIsSetupChan chan (bool)) *Server {
 	env = os.Getenv("GO_ENV")
 	s := &Server{
 		quit: make(chan interface{}),
@@ -56,7 +56,7 @@ func CreateServer(LogFileIsSetupChan chan(bool)) *Server {
 	log.Println("Listening on " + serverHost + ":" + serverPort)
 	log.Println("Waiting for client...")
 
-	<- LogFileIsSetupChan
+	<-LogFileIsSetupChan
 	s.wg.Add(1)
 	s.serve()
 	return s
@@ -78,7 +78,7 @@ func (s *Server) serve() {
 		conn, err := s.listener.Accept()
 		if err != nil {
 			select {
-			case <- s.quit:
+			case <-s.quit:
 				return
 			default:
 				log.Println("error: ", err)
@@ -120,12 +120,9 @@ ReadLoop:
 			if n == 0 {
 				return
 			}
-			input := string(buf[:n - 2])  // subtract by two because the commands always have an extra /n at the end
-			err = handleCommand(input, s, conn) // TODO: trigger channel for chat
+			input := string(buf[:n-2]) // subtract by two because the commands always have an extra /n at the end
 			log.Printf("received from %v: %s", conn.RemoteAddr(), input)
-			if (env == "TEST") {
-				numberMessagesReceived <- s.numberMessages
-			}
+			err = handleCommand(input, s, conn) // TODO: trigger channel for chat
 			if err != nil {
 				log.Println(err)
 				return

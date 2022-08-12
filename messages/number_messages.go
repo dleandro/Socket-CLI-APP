@@ -1,11 +1,11 @@
 package messages
 
 import (
+	"errors"
 	"log"
 	"os"
 	"sync"
 	"time"
-	"errors"
 	"unicode"
 )
 
@@ -30,7 +30,7 @@ func Init(quit chan interface{}, wg sync.WaitGroup) *NumberMessages {
 	nm := &NumberMessages{}
 
 	wg.Add(1)
-	go nm.scheduleSummary(quit, wg)  // need to add this go routine to the wait group
+	go nm.scheduleSummary(quit, wg)
 
 	return nm
 }
@@ -39,7 +39,7 @@ func (nm *NumberMessages) scheduleSummary(quit chan interface{}, wg sync.WaitGro
 	defer wg.Done()
 	for range time.Tick(10 * time.Second) {
 		select {
-		case <- quit:
+		case <-quit:
 			return
 		default:
 			nm.printSummary()
@@ -79,6 +79,10 @@ func checkIfMessageIsValid(input string) error {
 func (m *NumberMessages) handleNewNumber(inputNumber string) error {
 	m.logNumber(inputNumber) // TODO: could've put this in a go routine
 	m.messageList = append(m.messageList, inputNumber)
+
+	if os.Getenv("GO_ENV") == "TEST" {
+		numberMessagesReceived <- m
+	}
 
 	return nil
 }
